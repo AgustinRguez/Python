@@ -1,0 +1,106 @@
+DOCKER:
+
+contenedor: forma de empaquetar una app donde estara incluido
+el codigo (python java), tendra un .env donde tendra nuestras variables de entorno. Son portables, se comparte entre devs (desarrollo y devops), almacenables en un repo de contenedores. Hay dos tipos de repos (publicos: dockerhub (apps como postgres python)). Una imagen es el empaquetado que contiene las dependencias y el codigo, un container son capaz y capaz de imagenes, el kernel de cualquier SO es lo que se comunica el hardware con las aplicaciones. Con los volumes vas a evitar que los datos sean eliminados cuando elimines un contenedor, sirve para el constante cambio en un desarrollo
+
+COMANDOS:
+
+- docker images: listado completo de las imagenes descargadas
+- docker pull python: 2 alternativas, especificar version o no poner nada y descarga la ultima
+- docker pull python:3 (le doy la version)
+- docker rmi python (o usar image ID) (eliminar la imagen)
+- docker create (nombre de imagen: python - mongo) (crear contenedor) o docker container create mongo/python
+- docker start (ID que te devuelve al crear container) correr el contenedor
+- docker ps (devuelve la tabla con los datos del contenedor activo)
+- docker stop (ID container) (detener el contenedor)
+- docker ps -a (ver todos los contenedores creados)
+- docker create -p27017:27017 --name monguito mongo (ejem para mongo)
+- docker logs monguito (con --follow seguis los llamados en los logs)
+- (ejem usando variables de entorno): docker create -p27017:27017 --name monguito -e MONGO... =VALOR -e MONGO_INIT... =VALOR mongo
+- docker network create mired (devuelve id)
+- docker network rm mired
+- docker build -t miapp:1 . (crear contenedores a traves de un archivo dockerfile)
+- docker create -p27017:27017 --name monguito -- network mired -e (las variables de entorno y terminamos con) mongo/python
+(YA TENIENDO EL DOCKER-COMPOSE.YML) docker compose up
+- docker compose down (limpia todo lo q crea, contenedores, la network)
+- docker compose -f (le da la pauta de que recibe un dockercompose customizado) docker-compose-dev.yml up
+
+
+TOMAR LA APP Y METERLA DENTRO DE UN CONTENEDOR:
+
+crear un Dockerfile
+FROM node:18 --> para que se base en otra imagen
+RUN mkdir -p /home/app (ruta dentro del contenedor, no referencia al sistema de archivos)
+COPY . /home/app (indicar de donde saca el codigo fuente)
+EXPOSE 8000 (exponer un puerto)
+CMD ["node", "/home/app/index.js"]
+
+AGREGAR DOCKER-COMPOSE:
+
+crear un docker-compose.yml
+version: "3.9"
+services:
+	1 tab mi_app: 
+		build: .
+		ports: 
+			- "3000:3000" anfitrion/contenedor
+		links:
+			- monguito/python_dev_container
+	1 tab monguito/python_dev_container:
+		image: mongo/python
+		ports:
+			- "27017:27017"
+		environment:
+			MONGO_INIT.. =VALOR
+		volumes: (es para indicarle al contenedor monguito cuales son los volumes q va a usar)		- mongo-data: /data/db (donde guarda su data mongodb)
+			- postgres: /var/lib/postgresql/data
+			
+volumes: (definir todos los volumenes q va a utilizar nuestro contenedor)
+	1 tab mongo-data: 			
+
+
+(SOLO PARA PYTHON): Esto crea y corre el contenedor (necesitas la imagen)
+docker run -dit -p 8000:8000 --name python_dev_container python tail -f /dev/null
+-d: lo corre en segundo plano / -i modo interactivo / -t asigna una pseudo terminal / -p es para el puerto. "tail -f /dev/null" es un proceso q lo mantiene vivo
+
+DATOS: el puerto que te devuelve en docker ps, el puerto es el que utiliza el servicio (python/mongo) para que las apps se puedan conectar a el a leer los datos de la bdd. A python asignale un puerto por que cuando creas y corres el container no lo hace por defecto (siempre que vayas a usar algun servicio como fast o django).
+Para comunicar dos contenedores (ej: nodeJs y otro de mongo) es agrupando y haciendo una red interna
+
+
+CONFIGURAR MULTIPLES AMBIENTES:
+
+crear otro Dockerfile.dev
+FROM node:18 --> para que se base en otra imagen
+RUN mkdir -p /home/app (ruta dentro del contenedor, no referencia al sistema de archivos)
+WORKDIR /home/app
+
+COPY . /home/app (indicar de donde saca el codigo fuente)
+EXPOSE 8000 (exponer un puerto)
+CMD ["node", "index.js"]
+
+crear otro archivo compose: 
+docker-compose-dev.yml
+version: "3.9"
+services:
+	1 tab mi_app: 
+		build:
+			context: .
+			dockerfile: Dockerfile.dev
+		ports: 
+			- "3000:3000" anfitrion/contenedor
+		links:
+			- monguito/python_dev_container
+		volumes:
+			- .:/home/app
+
+	1 tab monguito/python_dev_container:
+		image: mongo/python
+		ports:
+			- "27017:27017"
+		environment:
+			MONGO_INIT.. =VALOR
+		volumes: (es para indicarle al contenedor monguito cuales son los volumes q va a usar)		- mongo-data: /data/db (donde guarda su data mongodb)
+			- postgres: /var/lib/postgresql/data
+			
+volumes: (definir todos los volumenes q va a utilizar nuestro contenedor)
+	1 tab mongo-data: 	
