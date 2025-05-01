@@ -24,7 +24,7 @@ COMANDOS:
 (YA TENIENDO EL DOCKER-COMPOSE.YML) docker compose up
 - docker compose down (limpia todo lo q crea, contenedores, la network)
 - docker compose -f (le da la pauta de que recibe un dockercompose customizado) docker-compose-dev.yml up
-
+- docker builder prune (borra la cache de todos los builds)
 
 TOMAR LA APP Y METERLA DENTRO DE UN CONTENEDOR:
 

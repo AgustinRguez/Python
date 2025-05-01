@@ -1,0 +1,8 @@
+para buscar ocurrencias usar most_common de from collections import Counter()
+most_common(1)[0] para cuando haya mas ocurrencias
+most_common()[-1] para la menor ocurrencia
+SET:
+Se usa para verificar la pertenencia, eliminar duplicados y realizar operaciones de conjuntos unión, intersección, diferencia
+DEFAULTDICT:
+Te permite definir un valor por defecto para claves inexistentes, evitando errores al acceder a una clave no definida.
+Es muy útil para contar, agrupar o acumular elementos.
