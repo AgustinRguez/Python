@@ -1,8 +1,0 @@
-preguntas tecnicas:
-
-metodo privado que es
-abstraccion
-context manager
-decoradores
-programacion asincronica
-mutacion en python
